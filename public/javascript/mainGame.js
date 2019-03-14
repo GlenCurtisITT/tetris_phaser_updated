@@ -20,6 +20,7 @@ class mainGame extends Phaser.Scene {
         this.load.image('Blue', 'assets/blueBlocko.png');
         this.load.image('DarkBlue', 'assets/darkBlueBlocko.png');
         this.load.image('Orange', 'assets/orangeBlocko.png');
+        this.load.image('Ghost', 'assets/ghostBlocko.png');
 
         this.load.audio('backgroundMusic', 'assets/Tetris.mp3');
         this.load.audio('PieceRotation', 'assets/whoosh.mp3');
@@ -281,7 +282,11 @@ const redrawBoard = (board, context) => {
     for(let i = 0; i < board.length; i++){
         for(let j = 0; j < board[0].length; j++){
             if(board[i][j].value === -1){
-                context.image(horizontal, verticle, 'Black');
+                if(board[i][j].colour === 'Empty'){
+                    context.image(horizontal, verticle, 'Black');
+                }else {
+                    context.image(horizontal, verticle, 'Ghost');
+                }
             }else{
                 context.image(horizontal, verticle, board[i][j].colour);
             }
@@ -541,6 +546,15 @@ const updateBoard = (board, tetrimino, startingLine, blocksIn, context, movement
         verticle += 18;
     }
 
+    //Clear Ghost
+    for(let i = 0; i < board.length; i++){
+        for(let j = 0; j < board[0].length; j++){
+            if(board[i][j].value === -1 && board[i][j].colour === 'Ghost'){
+                board[i][j].colour = 'Empty';
+            }
+        }
+    }
+
     if(startingLine !== 0){
         //delete everything directly above tetrimino while moving down as long as its not 0
         for(let i = 0; i < startingLine; i++){
@@ -548,6 +562,40 @@ const updateBoard = (board, tetrimino, startingLine, blocksIn, context, movement
                 board[i][j] = {value: -1, colour: 'Empty'};
             }
         }
+    }
+
+    //Draw ghost
+    for(let i = board.length-1; i >= 0; i--){
+        let empty = true;
+        let tetriI = 0;
+        let tetriJ = 0;
+        for(let j = blocksIn; j < blocksIn + tetriminoCoords[0].length; j++){
+            if(tetriminoCoords[tetriI][tetriJ] === 0){
+                if(board[i][j].value === 0){
+                    empty = false;
+                }
+            }
+            tetriJ++;
+        }
+        if(empty){
+            let blahI = 0;
+            let blahJ = 0;
+            for(let k = i - (1 * tetriminoCoords.length)+1; k <= i; k++){
+                for(let l = blocksIn; l < blocksIn+1 + tetriminoCoords[0].length-1; l++){
+                    if(tetriminoCoords[blahI][blahJ] === 0){
+                        if(board[k][l].value !== 0){
+                            board[k][l] = {value: -1, colour: 'Ghost'};
+                        }
+                    }
+                    blahJ++;
+                }
+                blahJ = 0;
+                blahI++;
+            }
+
+            break;
+        }
+        tetriJ = 0;
     }
 
     //Fix issues with pieces moving down
